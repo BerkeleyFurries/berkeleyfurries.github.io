@@ -1,0 +1,78 @@
+---
+/*
+    This is the contact page :3
+*/
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Contact">
+    <div class="container py-5">
+        <!-- TODO: ENTIRE PAGE -->
+        <h1>Hi :3</h1>
+
+        <p>under construction uwu</p>
+
+        <!-- Social media icons, EDIT HERE -->
+        <div class="social-media">
+            <a
+                href="https://www.instagram.com/berkeleyfurries/?hl=en"
+                target="_blank"
+                aria-label="Instagram"
+            >
+                <img src="/img/insta.png" alt="Instagram" />
+            </a>
+            <a
+                href="https://twitter.com/berkeleyfurries?lang=en"
+                target="_blank"
+                aria-label="Twitter"
+            >
+                <img src="/img/twitter.png" alt="Twitter" />
+            </a>
+            <a
+                href="https://www.tiktok.com/@berkeleyfurries"
+                target="_blank"
+                aria-label="TikTok"
+            >
+                <img src="/img/tiktok.png" alt="TikTok" />
+            </a>
+            <a
+                href="https://www.tumblr.com/berkeleyfurries"
+                target="_blank"
+                aria-label="Tumblr"
+            >
+                <img src="/img/tumblr.png" alt="Tumblr" />
+            </a>
+
+            <!-- TODO: ADD TELEGRAM AND DISCORD (maybe use the integrated discord widget? shows number uses n stuff, kinda cool) -->
+        </div>
+    </div>
+</BaseLayout>
+
+<style>
+    .social-media {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .social-media a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+
+    .social-media a:hover {
+        transform: translateY(-3px) scale(1.05);
+    }
+
+    .social-media img {
+        width: 48px; /* placeholder style to make them all the same */
+        height: 48px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 10px var(--blue-glow));
+    }
+</style>
