@@ -18,7 +18,7 @@ const {
 const siteUrl = Astro.site
     ? Astro.site.href
     : "https://berkeleyfurries.github.io/";
-const imageUrl = new URL("/img/AAAA_Logo.png", siteUrl).href;
+const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
 ---
 
 <!doctype html>
@@ -27,7 +27,7 @@ const imageUrl = new URL("/img/AAAA_Logo.png", siteUrl).href;
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title} | Furries at Berkeley</title>
-        <link rel="icon" type="image/png" href="/img/AAAA_Logo.png" />
+        <link rel="icon" type="image/png" href="/img/AAAA_Logo_256.png" />
 
         <!-- RICH EMBEDS -->
         <meta name="description" content={description} />
