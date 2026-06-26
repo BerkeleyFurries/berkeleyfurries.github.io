@@ -3,6 +3,7 @@
     This is the base page template :3
     All pages share this layout (header taskbar, footer, global styles)
 */
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
     title: string;
@@ -22,7 +23,8 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
 ---
 
 <!doctype html>
-<html lang="en">
+<!-- Remove the style for the background loading to make it white -->
+<html lang="en" style={title === "Home" ? "background-color: #001c57;" : ""}>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -59,12 +61,18 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
             crossorigin="anonymous"
         />
+
+        <ClientRouter />
     </head>
 
     <body>
         <!-- Header -->
         <!-- "taskbar" is the custom css element -->
-        <nav class="navbar navbar-expand-md navbar-dark fixed-top taskbar">
+        <nav
+            class="navbar navbar-expand-md navbar-dark fixed-top taskbar"
+            transition:persist
+            transition:animate="none"
+        >
             <div class="container-fluid">
                 <!-- "brand" is custom -->
                 <a

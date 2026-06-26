@@ -56,6 +56,7 @@ This website is configured to deploy automatically via **GitHub Actions**, which
 ## TODO:
 
 - [ ] Fill in the pages for `artists`(list of club artists and their art and socials), `contact` (different socials, mailing list signup, discord), `events` (calendar embed and scheduled monthly events), and `gallery` (photos from events)
+- [x] Add in transitions for loading in images, especially hero
 - [x] Calendar embed
 - [x] Create a rich embed for the website previews 
 - [ ] Optimize/compress/reogranize the images
