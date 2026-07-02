@@ -60,4 +60,4 @@ This website is configured to deploy automatically via **GitHub Actions**, which
 - [x] Calendar embed
 - [x] Create a rich embed for the website previews 
 - [ ] Optimize/compress/reogranize the images
-- [ ] 404 page
+- [x] 404 page
