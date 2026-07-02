@@ -21,7 +21,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 				<div class="logo-wrapper">
 					<!-- "hero-logo" is custom -->
 					<img
-						src="/img/AAAA_Logo.png"
+						src="/img/AAAA_Logo_256.png"
 						alt="Berkeley Furries Logo"
 						class="hero-logo"
 					/>
@@ -247,11 +247,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <style>
 	:root {
-		/* Hero Configuration (Overlay Tint & Positioning) */
 		--hero-overlay: rgba(0, 18, 55, 0.45);
 		--hero-fade-base: #ffffff;
-		--hero-box-bg: rgba(0, 18, 56, 0.65);
-		--hero-blur: blur(8px);
 	}
 	.hero {
 		height: 100vh;
@@ -276,12 +273,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 				var(--hero-overlay) 90%,
 				var(--hero-fade-base) 100%
 			),
-			url("/img/background/Semesterly_art_compressed.jpg");
+			url("/img/background/Semesterly_art_compressed.webp");
 		background-size: cover;
 		background-position: center top;
 		background-repeat: no-repeat;
 		z-index: 1;
-		animation: heroImageFadeIn 0.5s ease-out forwards;
 	}
 	.hero-content {
 		position: sticky;
@@ -296,17 +292,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 		box-sizing: border-box;
 		z-index: 2;
 	}
-	@keyframes heroImageFadeIn {
-		from {
-			opacity: 0.5;
-		}
-		to {
-			opacity: 1;
-		}
-	}
 	.logo-wrapper {
 		position: relative;
 		margin-bottom: 1rem;
+		isolation: isolate;
 	}
 	.logo-wrapper::after {
 		content: "";
@@ -314,11 +303,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		width: 140px;
-		height: 140px;
-		background: var(--gold);
-		filter: blur(40px);
-		opacity: 0.5;
+		width: 200px;
+		height: 200px;
+		background: radial-gradient(
+			circle,
+			rgba(253, 181, 21, 0.45) 0%,
+			rgba(253, 181, 21, 0) 70%
+		);
 		border-radius: 50%;
 		z-index: -1;
 	}
@@ -328,9 +319,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 		filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.15));
 	}
 	.hero-text-box {
-		background: var(--hero-box-bg);
-		backdrop-filter: var(--hero-blur);
-		-webkit-backdrop-filter: var(--hero-blur);
+		background: rgba(0, 18, 56, 0.85);
 		border: 1px solid var(--white-transparent-10);
 		padding: 2rem 2.5rem;
 		border-radius: var(--radius-lg);

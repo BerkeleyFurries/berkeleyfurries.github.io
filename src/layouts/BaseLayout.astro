@@ -62,6 +62,17 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
             crossorigin="anonymous"
         />
 
+        {
+            title === "Home" && (
+                <link
+                    rel="preload"
+                    href="/img/background/Semesterly_art_compressed.webp"
+                    as="image"
+                    type="image/webp"
+                />
+            )
+        }
+
         <ClientRouter />
     </head>
 
@@ -81,7 +92,7 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
                 >
                     <!-- "logo" is custom -->
                     <img
-                        src="/img/AAAA_Logo.png"
+                        src="/img/AAAA_Logo_256.png"
                         alt="Logo"
                         class="me-2 logo"
                     />
