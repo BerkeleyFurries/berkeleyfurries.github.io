@@ -61,3 +61,4 @@ This website is configured to deploy automatically via **GitHub Actions**, which
 - [x] Create a rich embed for the website previews 
 - [ ] Optimize/compress/reogranize the images
 - [x] 404 page
+- [x] Gallery page 

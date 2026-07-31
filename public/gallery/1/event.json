@@ -1,0 +1,22 @@
+{
+  "name": "Example Furmeet",
+  "slug": "example-furmeet",
+  "date": "2026-06-07",
+  "dateEnd": "2026-06-09",
+  "description": "Woof woof woof woof meow woof",
+  "cover": "4.jpg",
+  "photoMeta": {
+    "1.png": {
+      "photographer": "Nelli (@nelli)",
+      "suiters": [
+        "Barkeley"
+      ],
+      "description": "Dawg"
+    },
+    "2.jpg": {
+      "photographer": "Barkeley",
+      "suiters": [],
+      "description": ""
+    }
+  }
+}

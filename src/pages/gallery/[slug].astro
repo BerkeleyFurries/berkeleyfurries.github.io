@@ -1,0 +1,779 @@
+---
+/*
+    Dynamic event sub-page :3
+    Route: /gallery/[slug]
+    - Reads ALL event.json files at build time to generate static routes
+    - Shows event header + full masonry-ish photo grid
+    - Each photo opens the same lightbox from gallery.astro's logic, rebuilt here
+*/
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+
+interface PhotoMeta {
+    photographer?: string;
+    suiters?: string[];
+    description?: string;
+}
+
+interface GalleryEvent {
+    id: string;
+    name: string;
+    slug: string;
+    date: string;
+    dateEnd?: string;
+    description: string;
+    cover: string;
+    coverUrl: string;
+    photoMeta: Record<string, PhotoMeta>;
+    photos: string[];
+}
+
+// getStaticPaths: enumerate every event slug at build time
+export async function getStaticPaths() {
+    const IMAGE_EXTS = new Set([
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".gif",
+        ".avif",
+    ]);
+    const galleryRoot = join(process.cwd(), "public", "gallery");
+    const paths: {
+        params: { slug: string };
+        props: { event: GalleryEvent };
+    }[] = [];
+
+    try {
+        const folders = await readdir(galleryRoot, { withFileTypes: true });
+        for (const folder of folders.filter((d) => d.isDirectory())) {
+            const folderPath = join(galleryRoot, folder.name);
+            try {
+                const jsonRaw = await readFile(
+                    join(folderPath, "event.json"),
+                    "utf-8",
+                );
+                const json = JSON.parse(jsonRaw);
+                const allFiles = await readdir(folderPath);
+                const photos = allFiles
+                    .filter((f) => {
+                        const ext = "." + f.split(".").pop()!.toLowerCase();
+                        return IMAGE_EXTS.has(ext);
+                    })
+                    .sort((a, b) =>
+                        a.localeCompare(b, undefined, {
+                            numeric: true,
+                            sensitivity: "base",
+                        }),
+                    );
+                const slug = json.slug ?? folder.name;
+                paths.push({
+                    params: { slug },
+                    props: {
+                        event: {
+                            id: folder.name,
+                            name: json.name ?? "Untitled Event",
+                            slug,
+                            date: json.date ?? "",
+                            dateEnd: json.dateEnd ?? "",
+                            description: json.description ?? "",
+                            cover: json.cover ?? photos[0] ?? "",
+                            coverUrl: `/gallery/${folder.name}/${json.cover ?? photos[0] ?? ""}`,
+                            photoMeta: json.photoMeta ?? {},
+                            photos,
+                        },
+                    },
+                });
+            } catch (err) {
+                console.error(
+                    `Error loading gallery event folder "${folder.name}":`,
+                    err,
+                );
+            }
+        }
+    } catch (err) {
+        console.error("Error reading gallery directory:", err);
+    }
+
+    return paths;
+}
+
+const { event } = Astro.props as { event: GalleryEvent };
+
+function formatDate(date: string, dateEnd?: string): string {
+    if (!date) return "";
+    const fmt = (d: string) =>
+        new Date(d + "T12:00:00").toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        });
+    return dateEnd ? `${fmt(date)} – ${fmt(dateEnd)}` : fmt(date);
+}
+
+const basePath = `/gallery/${event.id}/`;
+---
+
+<BaseLayout
+    title=`${event.name} Gallery`
+    description={event.description || `Photos from ${event.name}`}
+>
+    <!-- Event Header -->
+    <section class="hero-banner">
+        <div class="hero-banner-bg-wrap">
+            <img
+                src={event.coverUrl}
+                alt=""
+                class="hero-banner-bg"
+                loading="eager"
+                decoding="async"
+                onerror="this.style.display='none'"
+            />
+            <div class="hero-banner-overlay"></div>
+        </div>
+        <div class="container hero-banner-content">
+            <a href="/gallery" class="back-link">← Back to Gallery</a>
+            <h1 class="event-name">{event.name}</h1>
+            {
+                event.date && (
+                    <p class="event-date">
+                        📅 {formatDate(event.date, event.dateEnd)}
+                    </p>
+                )
+            }
+            {
+                event.description && (
+                    <p class="event-description">{event.description}</p>
+                )
+            }
+            <p class="event-photo-count">
+                {event.photos.length} photo{
+                    event.photos.length !== 1 ? "s" : ""
+                }
+            </p>
+        </div>
+    </section>
+
+    <!-- Photo Grid -->
+    <section class="photo-section">
+        <div class="container">
+            {
+                event.photos.length === 0 ? (
+                    <div class="empty-state">
+                        <span>🐾</span>
+                        <p>No photos in this event yet.</p>
+                    </div>
+                ) : (
+                    <div class="photo-grid" id="photo-grid">
+                        {event.photos.map((filename, idx) => {
+                            const meta = event.photoMeta[filename] ?? {};
+                            const url = basePath + filename;
+                            return (
+                                <button
+                                    class="photo-thumb-btn"
+                                    data-index={idx}
+                                    aria-label={`View photo ${idx + 1}${meta.suiters?.length ? ` — ${meta.suiters.join(", ")}` : ""}`}
+                                >
+                                    <div class="photo-thumb-wrap">
+                                        <img
+                                            src={url}
+                                            alt={filename}
+                                            class="photo-thumb"
+                                            loading="lazy"
+                                            decoding="async"
+                                            onerror="this.closest('.photo-thumb-wrap').classList.add('img-error')"
+                                        />
+                                        <div class="photo-thumb-overlay">
+                                            {meta.description ? (
+                                                <span class="thumb-description">
+                                                    {meta.description}
+                                                </span>
+                                            ) : null}
+                                            {meta.suiters?.length ? (
+                                                <span class="thumb-suiters">
+                                                    🐾 {meta.suiters.join(", ")}
+                                                </span>
+                                            ) : null}
+                                            {meta.photographer ? (
+                                                <span class="thumb-photographer">
+                                                    📷 {meta.photographer}
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )
+            }
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div
+        id="gallery-lightbox"
+        class="lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Photo viewer"
+        hidden
+    >
+        <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+
+        <!-- Close button — fixed to viewport top-right, never moves -->
+        <button
+            class="lightbox-close"
+            id="lightbox-close"
+            aria-label="Close gallery">✕</button
+        >
+
+        <div class="lightbox-inner">
+            <button
+                class="lightbox-nav lightbox-prev"
+                id="lightbox-prev"
+                aria-label="Previous photo">‹</button
+            >
+            <button
+                class="lightbox-nav lightbox-next"
+                id="lightbox-next"
+                aria-label="Next photo">›</button
+            >
+            <div class="lightbox-img-wrap">
+                <img id="lightbox-img" src="" alt="" class="lightbox-img" />
+                <div class="lightbox-spinner" id="lightbox-spinner"></div>
+            </div>
+            <div class="lightbox-caption">
+                <div class="lightbox-meta">
+                    <span class="lightbox-counter" id="lightbox-counter"></span>
+                    <span
+                        class="lightbox-photographer"
+                        id="lightbox-photographer"></span>
+                    <span class="lightbox-suiters" id="lightbox-suiters"></span>
+                </div>
+                <p class="lightbox-description" id="lightbox-description"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embed photo data for JS -->
+    <div
+        id="event-photos-data-container"
+        data-photos-data={JSON.stringify({
+            basePath,
+            photos: event.photos,
+            photoMeta: event.photoMeta,
+        })}
+        hidden
+    >
+    </div>
+</BaseLayout>
+
+<script>
+    interface PhotoMeta {
+        photographer?: string;
+        suiters?: string[];
+        description?: string;
+    }
+    interface EventPhotosData {
+        basePath: string;
+        photos: string[];
+        photoMeta: Record<string, PhotoMeta>;
+    }
+
+    function initSlugGallery() {
+        const raw =
+            document.getElementById("event-photos-data-container")?.dataset
+                .photosData ?? "{}";
+        const data: EventPhotosData = JSON.parse(raw);
+        const { basePath, photos, photoMeta } = data;
+        if (!photos || photos.length === 0) return;
+
+        // In-memory image cache to retain loaded images and prevent re-fetches
+        const imageCache = new Map<string, HTMLImageElement>();
+
+        function preloadImage(url: string): HTMLImageElement {
+            if (!imageCache.has(url)) {
+                const img = new Image();
+                img.src = url;
+                imageCache.set(url, img);
+            }
+            return imageCache.get(url)!;
+        }
+
+        // Eagerly preload all event photos into memory
+        photos.forEach((f) => preloadImage(basePath + f));
+
+        let currentIndex = 0;
+
+        const lightbox = document.getElementById("gallery-lightbox");
+        if (!lightbox) return;
+
+        const backdrop = document.getElementById("lightbox-backdrop")!;
+        const closeBtn = document.getElementById("lightbox-close")!;
+        const prevBtn = document.getElementById("lightbox-prev")!;
+        const nextBtn = document.getElementById("lightbox-next")!;
+        const imgEl = document.getElementById(
+            "lightbox-img",
+        ) as HTMLImageElement;
+        const spinner = document.getElementById("lightbox-spinner")!;
+        const counterEl = document.getElementById("lightbox-counter")!;
+        const photographerEl = document.getElementById(
+            "lightbox-photographer",
+        )!;
+        const suitersEl = document.getElementById("lightbox-suiters")!;
+        const descriptionEl = document.getElementById("lightbox-description")!;
+
+        function openLightbox(index: number) {
+            currentIndex = index;
+            showPhoto(index);
+            lightbox!.hidden = false;
+            document.body.style.overflow = "hidden";
+            setTimeout(() => closeBtn.focus(), 50);
+        }
+
+        function closeLightbox() {
+            lightbox!.hidden = true;
+            document.body.style.overflow = "";
+            imgEl.src = "";
+        }
+
+        function showPhoto(index: number) {
+            const total = photos.length;
+            index = ((index % total) + total) % total;
+            currentIndex = index;
+
+            const filename = photos[index];
+            const url = basePath + filename;
+            const meta = photoMeta[filename] ?? {};
+
+            const cached = preloadImage(url);
+            imgEl.alt = filename;
+
+            if (cached.complete && cached.naturalWidth !== 0) {
+                imgEl.src = url;
+                imgEl.classList.add("loaded");
+                spinner.hidden = true;
+            } else {
+                imgEl.classList.remove("loaded");
+                spinner.hidden = false;
+                imgEl.src = url;
+                cached.onload = () => {
+                    imgEl.classList.add("loaded");
+                    spinner.hidden = true;
+                };
+                cached.onerror = () => {
+                    spinner.hidden = true;
+                };
+            }
+
+            counterEl.textContent = `${index + 1} / ${total}`;
+            photographerEl.textContent = meta.photographer
+                ? `📷 ${meta.photographer}`
+                : "";
+            suitersEl.textContent = meta.suiters?.length
+                ? `🐾 ${meta.suiters.join(", ")}`
+                : "";
+            descriptionEl.textContent = meta.description ?? "";
+
+            prevBtn.style.display = total > 1 ? "" : "none";
+            nextBtn.style.display = total > 1 ? "" : "none";
+
+            // Preload next image if not already cached
+            if (total > 1) {
+                const nextUrl = basePath + photos[(index + 1) % total];
+                preloadImage(nextUrl);
+            }
+        }
+
+        function navigate(dir: 1 | -1) {
+            showPhoto(currentIndex + dir);
+        }
+
+        // Open on thumbnail click
+        document
+            .getElementById("photo-grid")
+            ?.addEventListener("click", (e) => {
+                const btn = (e.target as Element).closest(
+                    "[data-index]",
+                ) as HTMLElement | null;
+                if (btn) openLightbox(Number(btn.dataset.index));
+            });
+
+        closeBtn.addEventListener("click", closeLightbox);
+        backdrop.addEventListener("click", closeLightbox);
+        prevBtn.addEventListener("click", () => navigate(-1));
+        nextBtn.addEventListener("click", () => navigate(1));
+
+        document.addEventListener("keydown", (e) => {
+            if (lightbox!.hidden) return;
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowLeft") navigate(-1);
+            if (e.key === "ArrowRight") navigate(1);
+        });
+
+        let touchStartX = 0;
+        lightbox.addEventListener(
+            "touchstart",
+            (e) => {
+                touchStartX = e.touches[0].clientX;
+            },
+            { passive: true },
+        );
+        lightbox.addEventListener("touchend", (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+        });
+    }
+
+    document.addEventListener("astro:page-load", initSlugGallery);
+</script>
+
+<style>
+    /* Unified Hero Banner */
+    .hero-banner {
+        margin-top: -15px;
+        position: relative;
+        min-height: 320px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+        background: var(--dark-blue);
+        border-bottom: 3px solid var(--gold);
+    }
+    .hero-banner-bg-wrap {
+        position: absolute;
+        inset: 0;
+    }
+    .hero-banner-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        opacity: 0.5;
+    }
+    .hero-banner-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0, 10, 30, 0.92) 0%,
+            rgba(0, 10, 30, 0.35) 100%
+        );
+    }
+    .hero-banner-content {
+        position: relative;
+        z-index: 1;
+        padding-top: 5rem;
+        padding-bottom: 2.5rem;
+        width: 100%;
+    }
+    .back-link {
+        display: inline-block;
+        color: var(--gold);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        opacity: 0.85;
+        transition: opacity 0.2s;
+    }
+    .back-link:hover {
+        opacity: 1;
+    }
+    .event-name {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--text-title);
+        margin-bottom: 0.4rem;
+        line-height: 1.2;
+    }
+    .event-date {
+        color: var(--gold);
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.6rem;
+    }
+    .event-description {
+        color: var(--text-subtitle);
+        font-size: 1rem;
+        line-height: 1.6;
+        max-width: 650px;
+        margin-bottom: 0.75rem;
+    }
+    .event-photo-count {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* Photo Grid */
+    .photo-section {
+        padding: 3rem 0 4rem;
+    }
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.75rem;
+    }
+    .photo-thumb-btn {
+        all: unset;
+        cursor: pointer;
+        display: block;
+    }
+    .photo-thumb-wrap {
+        position: relative;
+        aspect-ratio: 1;
+        background: var(--light-gray);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        border: 1px solid var(--card-border);
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease;
+    }
+    .photo-thumb-wrap.img-error::after {
+        content: "🐾";
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+    .photo-thumb-btn:hover .photo-thumb-wrap {
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(0, 38, 118, 0.12);
+    }
+    .photo-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.3s ease;
+        display: block;
+    }
+    .photo-thumb-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 10, 30, 0);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0.5rem;
+        gap: 0.2rem;
+        transition: background 0.25s ease;
+    }
+    .photo-thumb-btn:hover .photo-thumb-overlay {
+        background: rgba(0, 10, 30, 0.6);
+    }
+    .thumb-description,
+    .thumb-suiters,
+    .thumb-photographer {
+        font-size: 0.72rem;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 4px;
+        padding: 0.15rem 0.4rem;
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .thumb-description {
+        font-style: italic;
+    }
+    .photo-thumb-btn:hover .thumb-description,
+    .photo-thumb-btn:hover .thumb-suiters,
+    .photo-thumb-btn:hover .thumb-photographer {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 1rem;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+    .empty-state span {
+        display: block;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Lightbox */
+    .lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .lightbox[hidden] {
+        display: none;
+    }
+    .lightbox-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 10, 30, 0.92);
+        backdrop-filter: blur(6px);
+        cursor: pointer;
+    }
+    .lightbox-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 92vw;
+        max-height: 92vh;
+        width: 100%;
+    }
+    .lightbox-img-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 88vw;
+        max-height: 78vh;
+        width: 100%;
+    }
+    .lightbox-img {
+        max-width: 100%;
+        max-height: 78vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: var(--radius-md);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .lightbox-img.loaded {
+        opacity: 1;
+    }
+    .lightbox-spinner {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+    .lightbox-spinner[hidden] {
+        display: none;
+    }
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    /* Close button — fixed to viewport top-right, never moves with image */
+    .lightbox-close {
+        position: fixed;
+        top: 1.25rem;
+        right: 1.25rem;
+        z-index: 10001;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--white);
+        font-size: 1.4rem;
+        cursor: pointer;
+        width: 2.6rem;
+        height: 2.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        backdrop-filter: blur(4px);
+        transition: background 0.2s ease;
+    }
+    .lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.22);
+    }
+    .lightbox-nav {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--white);
+        font-size: 2.2rem;
+        line-height: 1;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        transition: background 0.2s ease;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .lightbox-prev {
+        left: 1rem;
+    }
+    .lightbox-next {
+        right: 1rem;
+    }
+    .lightbox-nav:hover {
+        background: rgba(255, 255, 255, 0.18);
+    }
+    .lightbox-caption {
+        margin-top: 1rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .lightbox-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .lightbox-counter {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.88rem;
+    }
+    .lightbox-photographer,
+    .lightbox-suiters {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.88rem;
+    }
+    .lightbox-description {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        font-style: italic;
+        max-width: 60ch;
+        text-align: center;
+        margin: 0;
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+        .event-name {
+            font-size: 1.75rem;
+        }
+        .photo-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .lightbox-nav {
+            display: none;
+        }
+        .lightbox-img {
+            max-height: 65vh;
+        }
+    }
+</style>

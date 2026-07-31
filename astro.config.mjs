@@ -1,4 +1,8 @@
 import { defineConfig } from 'astro/config';
+import events from 'node:events';
+
+// Increase default listener limit to prevent Vite/HMR dev server socket warnings
+events.defaultMaxListeners = 20;
 
 // https://astro.build/config
 export default defineConfig({
