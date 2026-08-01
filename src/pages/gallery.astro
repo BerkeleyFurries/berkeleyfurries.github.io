@@ -190,19 +190,12 @@ function formatDate(date: string, dateEnd?: string): string {
                                         <p class="card-desc">{event.description}</p>
                                     )}
                                     <div class="card-actions">
-                                        <button
-                                            class="btn-lightbox"
-                                            data-lightbox-open={event.id}
-                                            aria-label={`View ${event.name} photos`}
-                                        >
-                                            View Photos
-                                        </button>
                                         <a
                                             href={`/gallery/${event.slug}`}
-                                            class="btn-subpage"
-                                            aria-label={`Open dedicated page for ${event.name}`}
+                                            class="btn-lightbox"
+                                            aria-label={`View ${event.name} page`}
                                         >
-                                            Full Page ↗
+                                            View Page →
                                         </a>
                                     </div>
                                 </div>
@@ -662,7 +655,8 @@ function formatDate(date: string, dateEnd?: string): string {
         flex-wrap: wrap;
     }
     .btn-lightbox {
-        flex: 1;
+        display: inline-block;
+        width: 100%;
         background: var(--blue);
         color: var(--white);
         border: none;
@@ -671,29 +665,14 @@ function formatDate(date: string, dateEnd?: string): string {
         font-size: 0.88rem;
         font-weight: 600;
         cursor: pointer;
+        text-align: center;
+        text-decoration: none;
         transition: background 0.2s ease, transform 0.15s ease;
     }
     .btn-lightbox:hover {
         background: var(--dark-blue);
         transform: translateY(-1px);
-    }
-    .btn-subpage {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-decoration: none;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--card-border);
-        border-radius: var(--radius-sm);
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-    .btn-subpage:hover {
-        color: var(--blue);
-        border-color: var(--blue);
-        background: rgba(0, 38, 118, 0.04);
+        color: var(--white);
     }
 
     /* Empty State */
