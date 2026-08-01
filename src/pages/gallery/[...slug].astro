@@ -467,8 +467,6 @@ const pageOgImage = isPhotoRoute
             return null;
         }
 
-        let pushedModalState = false;
-
         function openLightbox(index: number, updateUrl = true) {
             currentIndex = index;
             showPhoto(index, updateUrl);
@@ -482,17 +480,12 @@ const pageOgImage = isPhotoRoute
             document.body.style.overflow = "";
             imgEl.src = "";
             if (updateUrl) {
-                if (pushedModalState) {
-                    pushedModalState = false;
-                    history.back();
-                } else {
-                    const targetPath = `/gallery/${slug}`;
-                    if (
-                        window.location.pathname !== targetPath &&
-                        window.location.pathname !== targetPath + "/"
-                    ) {
-                        history.replaceState(null, "", targetPath);
-                    }
+                const targetPath = `/gallery/${slug}`;
+                if (
+                    window.location.pathname !== targetPath &&
+                    window.location.pathname !== targetPath + "/"
+                ) {
+                    history.replaceState(history.state, "", targetPath);
                 }
             }
         }
@@ -508,24 +501,11 @@ const pageOgImage = isPhotoRoute
                     window.location.pathname !== targetPath &&
                     window.location.pathname !== targetPath + "/"
                 ) {
-                    const basePath = `/gallery/${slug}`;
-                    if (
-                        window.location.pathname === basePath ||
-                        window.location.pathname === basePath + "/"
-                    ) {
-                        history.pushState(
-                            { lightbox: true, index },
-                            "",
-                            targetPath,
-                        );
-                        pushedModalState = true;
-                    } else {
-                        history.replaceState(
-                            { lightbox: true, index },
-                            "",
-                            targetPath,
-                        );
-                    }
+                    history.replaceState(
+                        { ...history.state, lightbox: true, index },
+                        "",
+                        targetPath,
+                    );
                 }
             }
 
@@ -634,7 +614,6 @@ const pageOgImage = isPhotoRoute
             if (pathIdx !== null) {
                 openLightbox(pathIdx, false);
             } else if (!lightbox.hidden) {
-                pushedModalState = false;
                 closeLightbox(false);
             }
         }
