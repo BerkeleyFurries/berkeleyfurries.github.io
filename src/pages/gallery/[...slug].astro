@@ -156,14 +156,14 @@ const photoMeta = currentPhotoFile
     : {};
 
 const pageTitle = isPhotoRoute
-    ? `${event.name} — Photo ${initialPhotoIndex! + 1}`
+    ? `${event.name} — Photo ${initialPhotoIndex! + 1}/${event.photos.length}`
     : `${event.name} Gallery`;
 
 const pageDescription = isPhotoRoute
     ? [
           photoMeta.photographer ? `📷 ${photoMeta.photographer}` : "",
           photoMeta.description ||
-              `Photo ${initialPhotoIndex! + 1} from ${event.name}`,
+              `Photo ${initialPhotoIndex! + 1}/${event.photos.length} from ${event.name}`,
       ]
           .filter(Boolean)
           .join("\n")
