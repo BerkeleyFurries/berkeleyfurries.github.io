@@ -8,18 +8,23 @@ import { ClientRouter } from "astro:transitions";
 interface Props {
     title: string;
     description?: string;
+    ogImage?: string;
 }
 
 const {
     title,
-    description = "Meow meow meow!", // CHAGE THE DEFAULT DESCRIPTION HERE
+    description = "The Official Website for Furries at Berkeley! :3", // CHAGE THE DEFAULT DESCRIPTION HERE
+    ogImage,
 } = Astro.props;
 
 // This fetches the logo URL for rich embeds
 const siteUrl = Astro.site
     ? Astro.site.href
     : "https://berkeleyfurries.github.io/";
-const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
+const imageUrl = ogImage
+    ? new URL(ogImage, siteUrl).href
+    : new URL("/img/AAAA_Logo_512.png", siteUrl).href;
+const cardType = ogImage ? "summary_large_image" : "summary";
 ---
 
 <!doctype html>
@@ -42,10 +47,9 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
         <meta property="og:title" content={`${title} | Furries at Berkeley`} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={imageUrl} />
-        <meta property="og:image:type" content="image/png" />
 
         <!-- Twitter Card (Discord/Telegram also read these) -->
-        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:card" content={cardType} />
         <meta name="twitter:title" content={`${title} | Furries at Berkeley`} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={imageUrl} />

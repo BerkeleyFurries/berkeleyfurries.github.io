@@ -1,10 +1,10 @@
 ---
 /*
-    Dynamic event sub-page :3
-    Route: /gallery/[slug]
-    - Reads ALL event.json files at build time to generate static routes
-    - Shows event header + full masonry-ish photo grid
-    - Each photo opens the same lightbox from gallery.astro's logic, rebuilt here
+    Dynamic catch-all event route :3
+    Route: /gallery/[...slug]
+    Handles both:
+    - Main event page: /gallery/sammies
+    - Photo sub-routes: /gallery/sammies/photo/1
 */
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -33,7 +33,6 @@ interface GalleryEvent {
     photoThumbs: Record<string, string>;
 }
 
-// getStaticPaths: enumerate every event slug at build time
 export async function getStaticPaths() {
     const IMAGE_EXTS = new Set([
         ".jpg",
@@ -46,7 +45,7 @@ export async function getStaticPaths() {
     const galleryRoot = join(process.cwd(), "public", "gallery");
     const paths: {
         params: { slug: string };
-        props: { event: GalleryEvent };
+        props: { event: GalleryEvent; initialPhotoIndex: number | null };
     }[] = [];
 
     try {
@@ -74,31 +73,46 @@ export async function getStaticPaths() {
                 const slug = folder.name;
                 const coverFilename = json.cover ?? photos[0] ?? "";
                 const coverUrl = `/gallery/${folder.name}/${coverFilename}`;
-                const coverThumbUrl = await ensureThumbnail(folder.name, coverFilename);
+                const coverThumbUrl = await ensureThumbnail(
+                    folder.name,
+                    coverFilename,
+                );
 
                 const photoThumbs: Record<string, string> = {};
                 for (const photo of photos) {
-                    photoThumbs[photo] = await ensureThumbnail(folder.name, photo);
+                    photoThumbs[photo] = await ensureThumbnail(
+                        folder.name,
+                        photo,
+                    );
                 }
 
+                const eventData: GalleryEvent = {
+                    id: folder.name,
+                    name: json.name ?? "Untitled Event",
+                    slug,
+                    date: json.date ?? "",
+                    dateEnd: json.dateEnd ?? "",
+                    description: json.description ?? "",
+                    cover: coverFilename,
+                    coverUrl,
+                    coverThumbUrl,
+                    photoMeta: json.photoMeta ?? {},
+                    photos,
+                    photoThumbs,
+                };
+
+                // 1. Main event page route: /gallery/sammies
                 paths.push({
                     params: { slug },
-                    props: {
-                        event: {
-                            id: folder.name,
-                            name: json.name ?? "Untitled Event",
-                            slug,
-                            date: json.date ?? "",
-                            dateEnd: json.dateEnd ?? "",
-                            description: json.description ?? "",
-                            cover: coverFilename,
-                            coverUrl,
-                            coverThumbUrl,
-                            photoMeta: json.photoMeta ?? {},
-                            photos,
-                            photoThumbs,
-                        },
-                    },
+                    props: { event: eventData, initialPhotoIndex: null },
+                });
+
+                // 2. Photo sub-routes: /gallery/sammies/photo/1, /2, etc.
+                photos.forEach((_, idx) => {
+                    paths.push({
+                        params: { slug: `${slug}/photo/${idx + 1}` },
+                        props: { event: eventData, initialPhotoIndex: idx },
+                    });
                 });
             } catch (err) {
                 console.error(
@@ -114,7 +128,10 @@ export async function getStaticPaths() {
     return paths;
 }
 
-const { event } = Astro.props as { event: GalleryEvent };
+const { event, initialPhotoIndex } = Astro.props as {
+    event: GalleryEvent;
+    initialPhotoIndex: number | null;
+};
 
 function formatDate(date: string, dateEnd?: string): string {
     if (!date) return "";
@@ -128,11 +145,36 @@ function formatDate(date: string, dateEnd?: string): string {
 }
 
 const basePath = `/gallery/${event.id}/`;
+
+const isPhotoRoute =
+    typeof initialPhotoIndex === "number" &&
+    initialPhotoIndex >= 0 &&
+    initialPhotoIndex < event.photos.length;
+const currentPhotoFile = isPhotoRoute ? event.photos[initialPhotoIndex!] : null;
+const photoMeta = currentPhotoFile
+    ? (event.photoMeta[currentPhotoFile] ?? {})
+    : {};
+
+const pageTitle = isPhotoRoute
+    ? `${event.name} — Photo ${initialPhotoIndex! + 1}`
+    : `${event.name} Gallery`;
+
+const pageDescription = isPhotoRoute
+    ? photoMeta.description ||
+      (photoMeta.suiters?.length
+          ? `Suiters: ${photoMeta.suiters.join(", ")}`
+          : `Photo ${initialPhotoIndex! + 1} from ${event.name}`)
+    : event.description || `Photos from ${event.name}`;
+
+const pageOgImage = isPhotoRoute
+    ? event.photoThumbs[currentPhotoFile!] || `${basePath}${currentPhotoFile}`
+    : event.coverThumbUrl || event.coverUrl;
 ---
 
 <BaseLayout
-    title=`${event.name} Gallery`
-    description={event.description || `Photos from ${event.name}`}
+    title={pageTitle}
+    description={pageDescription}
+    ogImage={pageOgImage}
 >
     <!-- Event Header -->
     <section class="hero-banner">
@@ -184,7 +226,8 @@ const basePath = `/gallery/${event.id}/`;
                         {event.photos.map((filename, idx) => {
                             const meta = event.photoMeta[filename] ?? {};
                             const url = basePath + filename;
-                            const thumbUrl = event.photoThumbs?.[filename] || url;
+                            const thumbUrl =
+                                event.photoThumbs?.[filename] || url;
                             return (
                                 <button
                                     class="photo-thumb-btn"
@@ -234,7 +277,7 @@ const basePath = `/gallery/${event.id}/`;
         role="dialog"
         aria-modal="true"
         aria-label="Photo viewer"
-        hidden
+        hidden={!isPhotoRoute}
     >
         <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
 
@@ -249,37 +292,91 @@ const basePath = `/gallery/${event.id}/`;
             <button
                 class="lightbox-nav lightbox-prev"
                 id="lightbox-prev"
-                aria-label="Previous photo">‹</button
+                aria-label="Previous photo"
+                style={event.photos.length > 1 ? "" : "display: none;"}
+                >‹</button
             >
             <button
                 class="lightbox-nav lightbox-next"
                 id="lightbox-next"
-                aria-label="Next photo">›</button
+                aria-label="Next photo"
+                style={event.photos.length > 1 ? "" : "display: none;"}
+                >›</button
             >
             <div class="lightbox-img-wrap">
-                <img id="lightbox-img" src="" alt="" class="lightbox-img" />
-                <div class="lightbox-spinner" id="lightbox-spinner"></div>
+                <img
+                    id="lightbox-img"
+                    src={isPhotoRoute ? `${basePath}${currentPhotoFile}` : ""}
+                    alt={isPhotoRoute ? currentPhotoFile || "" : ""}
+                    class={isPhotoRoute
+                        ? "lightbox-img loaded"
+                        : "lightbox-img"}
+                />
+                <div
+                    class="lightbox-spinner"
+                    id="lightbox-spinner"
+                    hidden={isPhotoRoute}
+                >
+                </div>
             </div>
             <div class="lightbox-caption">
                 <div class="lightbox-meta">
-                    <span class="lightbox-counter" id="lightbox-counter"></span>
+                    <span class="lightbox-counter" id="lightbox-counter">
+                        {
+                            isPhotoRoute
+                                ? `${initialPhotoIndex! + 1} / ${event.photos.length}`
+                                : ""
+                        }
+                    </span>
                     <span
                         class="lightbox-photographer"
-                        id="lightbox-photographer"></span>
-                    <span class="lightbox-suiters" id="lightbox-suiters"></span>
+                        id="lightbox-photographer"
+                        style={photoMeta.photographer ? "" : "display: none;"}
+                        >{
+                            photoMeta.photographer
+                                ? `📷 ${photoMeta.photographer}`
+                                : ""
+                        }</span
+                    >
+                    <span
+                        class="lightbox-suiters"
+                        id="lightbox-suiters"
+                        style={photoMeta.suiters?.length
+                            ? ""
+                            : "display: none;"}
+                        >{
+                            photoMeta.suiters?.length
+                                ? `🐾 ${photoMeta.suiters.join(", ")}`
+                                : ""
+                        }</span
+                    >
                 </div>
-                <p class="lightbox-description" id="lightbox-description"></p>
+                <p
+                    class="lightbox-description"
+                    id="lightbox-description"
+                    style={photoMeta.description ? "" : "display: none;"}
+                >
+                    {photoMeta.description || ""}
+                </p>
             </div>
         </div>
     </div>
+
+    {
+        isPhotoRoute && (
+            <script is:inline>document.body.style.overflow = "hidden";</script>
+        )
+    }
 
     <!-- Embed photo data for JS -->
     <div
         id="event-photos-data-container"
         data-photos-data={JSON.stringify({
             basePath,
+            slug: event.slug,
             photos: event.photos,
             photoMeta: event.photoMeta,
+            initialPhotoIndex: initialPhotoIndex ?? null,
         })}
         hidden
     >
@@ -294,16 +391,28 @@ const basePath = `/gallery/${event.id}/`;
     }
     interface EventPhotosData {
         basePath: string;
+        slug: string;
         photos: string[];
         photoMeta: Record<string, PhotoMeta>;
+        initialPhotoIndex?: number | null;
     }
 
+    let cleanupSlugGallery: (() => void) | null = null;
+
     function initSlugGallery() {
-        const raw =
-            document.getElementById("event-photos-data-container")?.dataset
-                .photosData ?? "{}";
+        if (cleanupSlugGallery) {
+            cleanupSlugGallery();
+            cleanupSlugGallery = null;
+        }
+
+        const container = document.getElementById(
+            "event-photos-data-container",
+        );
+        if (!container) return;
+
+        const raw = container.dataset.photosData ?? "{}";
         const data: EventPhotosData = JSON.parse(raw);
-        const { basePath, photos, photoMeta } = data;
+        const { basePath, slug, photos, photoMeta, initialPhotoIndex } = data;
         if (!photos || photos.length === 0) return;
 
         function preloadNeighbors(
@@ -327,7 +436,7 @@ const basePath = `/gallery/${event.id}/`;
 
         let currentIndex = 0;
 
-        const lightbox = document.getElementById("gallery-lightbox");
+        const lightbox = document.getElementById("gallery-lightbox")!;
         if (!lightbox) return;
 
         const backdrop = document.getElementById("lightbox-backdrop")!;
@@ -344,25 +453,81 @@ const basePath = `/gallery/${event.id}/`;
         )!;
         const suitersEl = document.getElementById("lightbox-suiters")!;
         const descriptionEl = document.getElementById("lightbox-description")!;
+        const gridEl = document.getElementById("photo-grid");
 
-        function openLightbox(index: number) {
+        function getPhotoIndexFromPath(): number | null {
+            const pathName = decodeURIComponent(window.location.pathname);
+            const match = pathName.match(/\/photo\/(\d+)\/?$/i);
+            if (match) {
+                const pNum = parseInt(match[1], 10);
+                if (pNum >= 1 && pNum <= photos.length) {
+                    return pNum - 1;
+                }
+            }
+            return null;
+        }
+
+        let pushedModalState = false;
+
+        function openLightbox(index: number, updateUrl = true) {
             currentIndex = index;
-            showPhoto(index);
-            lightbox!.hidden = false;
+            showPhoto(index, updateUrl);
+            lightbox.hidden = false;
             document.body.style.overflow = "hidden";
             setTimeout(() => closeBtn.focus(), 50);
         }
 
-        function closeLightbox() {
-            lightbox!.hidden = true;
+        function closeLightbox(updateUrl = true) {
+            lightbox.hidden = true;
             document.body.style.overflow = "";
             imgEl.src = "";
+            if (updateUrl) {
+                if (pushedModalState) {
+                    pushedModalState = false;
+                    history.back();
+                } else {
+                    const targetPath = `/gallery/${slug}`;
+                    if (
+                        window.location.pathname !== targetPath &&
+                        window.location.pathname !== targetPath + "/"
+                    ) {
+                        history.replaceState(null, "", targetPath);
+                    }
+                }
+            }
         }
 
-        function showPhoto(index: number) {
+        function showPhoto(index: number, updateUrl = true) {
             const total = photos.length;
             index = ((index % total) + total) % total;
             currentIndex = index;
+
+            if (updateUrl) {
+                const targetPath = `/gallery/${slug}/photo/${index + 1}`;
+                if (
+                    window.location.pathname !== targetPath &&
+                    window.location.pathname !== targetPath + "/"
+                ) {
+                    const basePath = `/gallery/${slug}`;
+                    if (
+                        window.location.pathname === basePath ||
+                        window.location.pathname === basePath + "/"
+                    ) {
+                        history.pushState(
+                            { lightbox: true, index },
+                            "",
+                            targetPath,
+                        );
+                        pushedModalState = true;
+                    } else {
+                        history.replaceState(
+                            { lightbox: true, index },
+                            "",
+                            targetPath,
+                        );
+                    }
+                }
+            }
 
             const filename = photos[index];
             const url = basePath + filename;
@@ -385,7 +550,6 @@ const basePath = `/gallery/${event.id}/`;
                 spinner.hidden = true;
             }
 
-            // Preload 3 neighbors ahead and behind
             preloadNeighbors(index, photos, basePath);
 
             counterEl.textContent = `${index + 1} / ${total}`;
@@ -421,30 +585,26 @@ const basePath = `/gallery/${event.id}/`;
             showPhoto(currentIndex + dir);
         }
 
-        // Open on thumbnail click
-        document
-            .getElementById("photo-grid")
-            ?.addEventListener("click", (e) => {
-                const btn = (e.target as Element).closest(
-                    "[data-index]",
-                ) as HTMLElement | null;
-                if (btn) openLightbox(Number(btn.dataset.index));
-            });
+        const onGridClick = (e: MouseEvent) => {
+            const btn = (e.target as Element).closest(
+                "[data-index]",
+            ) as HTMLElement | null;
+            if (btn) openLightbox(Number(btn.dataset.index));
+        };
 
-        closeBtn.addEventListener("click", closeLightbox);
-        backdrop.addEventListener("click", closeLightbox);
-        prevBtn.addEventListener("click", () => navigate(-1));
-        nextBtn.addEventListener("click", () => navigate(1));
+        const onCloseClick = () => closeLightbox();
+        const onBackdropClick = () => closeLightbox();
+        const onPrevClick = () => navigate(-1);
+        const onNextClick = () => navigate(1);
 
-        document.addEventListener("keydown", (e) => {
-            if (lightbox!.hidden) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (lightbox.hidden) return;
             if (e.key === "Escape") closeLightbox();
             if (e.key === "ArrowLeft") navigate(-1);
             if (e.key === "ArrowRight") navigate(1);
-        });
+        };
 
-        // Tap/click image to advance: left 30% goes back, rest goes next
-        imgEl.addEventListener("click", (e) => {
+        const onImgClick = (e: MouseEvent) => {
             e.stopPropagation();
             const rect = imgEl.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
@@ -453,28 +613,75 @@ const basePath = `/gallery/${event.id}/`;
             } else {
                 navigate(1);
             }
-        });
+        };
 
         let touchStartX = 0;
         let touchStartY = 0;
-        lightbox.addEventListener(
-            "touchstart",
-            (e) => {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-            },
-            { passive: true },
-        );
-        lightbox.addEventListener("touchend", (e) => {
+        const onTouchStart = (e: TouchEvent) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        };
+        const onTouchEnd = (e: TouchEvent) => {
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
             if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
                 navigate(dx < 0 ? 1 : -1);
             }
+        };
+
+        function checkPathAndOpen() {
+            const pathIdx = getPhotoIndexFromPath();
+            if (pathIdx !== null) {
+                openLightbox(pathIdx, false);
+            } else if (!lightbox.hidden) {
+                pushedModalState = false;
+                closeLightbox(false);
+            }
+        }
+
+        gridEl?.addEventListener("click", onGridClick);
+        closeBtn.addEventListener("click", onCloseClick);
+        backdrop.addEventListener("click", onBackdropClick);
+        prevBtn.addEventListener("click", onPrevClick);
+        nextBtn.addEventListener("click", onNextClick);
+        document.addEventListener("keydown", onKeyDown);
+        imgEl.addEventListener("click", onImgClick);
+        lightbox.addEventListener("touchstart", onTouchStart, {
+            passive: true,
         });
+        lightbox.addEventListener("touchend", onTouchEnd);
+        window.addEventListener("popstate", checkPathAndOpen);
+
+        // Check on initial load
+        const initIdx =
+            typeof initialPhotoIndex === "number" && initialPhotoIndex >= 0
+                ? initialPhotoIndex
+                : getPhotoIndexFromPath();
+        if (initIdx !== null && initIdx >= 0 && initIdx < photos.length) {
+            openLightbox(initIdx, false);
+        }
+
+        cleanupSlugGallery = () => {
+            gridEl?.removeEventListener("click", onGridClick);
+            closeBtn.removeEventListener("click", onCloseClick);
+            backdrop.removeEventListener("click", onBackdropClick);
+            prevBtn.removeEventListener("click", onPrevClick);
+            nextBtn.removeEventListener("click", onNextClick);
+            document.removeEventListener("keydown", onKeyDown);
+            imgEl.removeEventListener("click", onImgClick);
+            lightbox.removeEventListener("touchstart", onTouchStart);
+            lightbox.removeEventListener("touchend", onTouchEnd);
+            window.removeEventListener("popstate", checkPathAndOpen);
+        };
     }
 
     document.addEventListener("astro:page-load", initSlugGallery);
+    document.addEventListener("astro:before-swap", () => {
+        if (cleanupSlugGallery) {
+            cleanupSlugGallery();
+            cleanupSlugGallery = null;
+        }
+    });
 </script>
 
 <style>
@@ -801,32 +1008,19 @@ const basePath = `/gallery/${event.id}/`;
     }
     .lightbox-photographer,
     .lightbox-suiters {
-        color: rgba(255, 255, 255, 0.85);
         font-size: 0.88rem;
+        color: var(--gold);
+        background: rgba(0, 0, 0, 0.4);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        border: 1px solid rgba(253, 181, 21, 0.2);
     }
     .lightbox-description {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.85rem;
-        font-style: italic;
-        max-width: 60ch;
-        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        max-width: 600px;
         margin: 0;
+        line-height: 1.5;
         white-space: pre-line;
-    }
-
-    /* Mobile */
-    @media (max-width: 600px) {
-        .event-name {
-            font-size: 1.75rem;
-        }
-        .photo-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .lightbox-nav {
-            display: none;
-        }
-        .lightbox-img {
-            max-height: 65vh;
-        }
     }
 </style>
