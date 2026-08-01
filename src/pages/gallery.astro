@@ -9,6 +9,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { ensureThumbnail } from "../utils/thumbnail";
 
 interface PhotoMeta {
     photographer?: string;
@@ -25,6 +26,7 @@ interface GalleryEvent {
     description: string;
     cover: string;
     coverUrl: string;   // resolved public URL
+    coverThumbUrl: string;
     photoMeta: Record<string, PhotoMeta>;
     photos: string[];   // all image filenames in the folder
     photoCount: number;
@@ -61,6 +63,10 @@ try {
                     }),
                 );
 
+            const coverFilename = json.cover ?? photos[0] ?? "";
+            const coverUrl = `/gallery/${folder.name}/${coverFilename}`;
+            const coverThumbUrl = await ensureThumbnail(folder.name, coverFilename);
+
             // fallbacks to Untitled Event and first picture for cover  
             events.push({
                 id: folder.name,
@@ -69,8 +75,9 @@ try {
                 date: json.date ?? "",
                 dateEnd: json.dateEnd ?? "",
                 description: json.description ?? "",
-                cover: json.cover ?? photos[0] ?? "",
-                coverUrl: `/gallery/${folder.name}/${json.cover ?? photos[0] ?? ""}`,
+                cover: coverFilename,
+                coverUrl,
+                coverThumbUrl,
                 photoMeta: json.photoMeta ?? {},
                 photos,
                 photoCount: photos.length,
@@ -155,12 +162,12 @@ function formatDate(date: string, dateEnd?: string): string {
                                 >
                                     <div class="card-cover-wrap">
                                         <img
-                                            src={event.coverUrl}
+                                            src={event.coverThumbUrl || event.coverUrl}
                                             alt={`Cover photo for ${event.name}`}
                                             class="card-cover-img"
                                             loading="lazy"
                                             decoding="async"
-                                            onerror="this.style.display='none';this.parentElement.classList.add('no-cover')"
+                                            onerror={`if (this.src !== '${event.coverUrl}') { this.src='${event.coverUrl}'; } else { this.style.display='none';this.parentElement.classList.add('no-cover'); }`}
                                         />
                                         <div class="card-cover-overlay">
                                             <span class="open-gallery-icon">🔍</span>

@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# generated gallery thumbnails
+public/gallery/**/thumbs/
+
 # generated types
 .astro/
 

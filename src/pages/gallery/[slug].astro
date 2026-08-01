@@ -10,6 +10,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { ensureThumbnail } from "../../utils/thumbnail";
 
 interface PhotoMeta {
     photographer?: string;
@@ -26,8 +27,10 @@ interface GalleryEvent {
     description: string;
     cover: string;
     coverUrl: string;
+    coverThumbUrl: string;
     photoMeta: Record<string, PhotoMeta>;
     photos: string[];
+    photoThumbs: Record<string, string>;
 }
 
 // getStaticPaths: enumerate every event slug at build time
@@ -69,6 +72,15 @@ export async function getStaticPaths() {
                         }),
                     );
                 const slug = folder.name;
+                const coverFilename = json.cover ?? photos[0] ?? "";
+                const coverUrl = `/gallery/${folder.name}/${coverFilename}`;
+                const coverThumbUrl = await ensureThumbnail(folder.name, coverFilename);
+
+                const photoThumbs: Record<string, string> = {};
+                for (const photo of photos) {
+                    photoThumbs[photo] = await ensureThumbnail(folder.name, photo);
+                }
+
                 paths.push({
                     params: { slug },
                     props: {
@@ -79,10 +91,12 @@ export async function getStaticPaths() {
                             date: json.date ?? "",
                             dateEnd: json.dateEnd ?? "",
                             description: json.description ?? "",
-                            cover: json.cover ?? photos[0] ?? "",
-                            coverUrl: `/gallery/${folder.name}/${json.cover ?? photos[0] ?? ""}`,
+                            cover: coverFilename,
+                            coverUrl,
+                            coverThumbUrl,
                             photoMeta: json.photoMeta ?? {},
                             photos,
+                            photoThumbs,
                         },
                     },
                 });
@@ -124,12 +138,12 @@ const basePath = `/gallery/${event.id}/`;
     <section class="hero-banner">
         <div class="hero-banner-bg-wrap">
             <img
-                src={event.coverUrl}
+                src={event.coverThumbUrl || event.coverUrl}
                 alt=""
                 class="hero-banner-bg"
                 loading="eager"
                 decoding="async"
-                onerror="this.style.display='none'"
+                onerror={`if (this.src !== '${event.coverUrl}') { this.src='${event.coverUrl}'; } else { this.style.display='none'; }`}
             />
             <div class="hero-banner-overlay"></div>
         </div>
@@ -170,6 +184,7 @@ const basePath = `/gallery/${event.id}/`;
                         {event.photos.map((filename, idx) => {
                             const meta = event.photoMeta[filename] ?? {};
                             const url = basePath + filename;
+                            const thumbUrl = event.photoThumbs?.[filename] || url;
                             return (
                                 <button
                                     class="photo-thumb-btn"
@@ -178,12 +193,12 @@ const basePath = `/gallery/${event.id}/`;
                                 >
                                     <div class="photo-thumb-wrap">
                                         <img
-                                            src={url}
+                                            src={thumbUrl}
                                             alt={filename}
                                             class="photo-thumb"
                                             loading="lazy"
                                             decoding="async"
-                                            onerror="this.closest('.photo-thumb-wrap').classList.add('img-error')"
+                                            onerror={`if (this.src !== '${url}') { this.src='${url}'; } else { this.closest('.photo-thumb-wrap').classList.add('img-error'); }`}
                                         />
                                         <div class="photo-thumb-overlay">
                                             {meta.description ? (
