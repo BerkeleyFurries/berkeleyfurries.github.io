@@ -34,6 +34,7 @@ Here is a quick tour of how the project is organized:
 ```text
 ├── .github/workflows/  # Deployment workflow (astro.yml)
 ├── public/             # Static assets (images, logos, icons)
+│   ├── gallery/        # Dynamic event photo galleries & event.json (see public/gallery/README.md)
 │   └── img/            # Club logos and social media graphics
 ├── src/
 │   ├── layouts/        # Reusable templates

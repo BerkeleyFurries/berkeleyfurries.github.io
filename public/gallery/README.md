@@ -91,7 +91,8 @@ public/gallery/
 
 ## Tips
 
-- **Folder names must be unique** across all events.
-- **Cover photo** should be a good landscape-ish crop — it's displayed at 4:3 ratio on the card.
-- **File names** don't need to follow any specific convention, but keeping them simple (e.g. `01.jpg`, `02.jpg`) makes `event.json` easier to write.
-- **Photos load lazily** — only the currently viewed photo is loaded in the lightbox, so large event folders are fine.
+- **Folder names must be unique** across all events (e.g., `sammies`, `fall-picnic-2026`).
+- **Cover photo**: Set via `cover` in `event.json`. If omitted, the first photo in the folder is used automatically. The card preview uses a WebP thumbnail while the event page hero header uses the full-resolution cover.
+- **File names** don't need any specific format, but simple names (e.g. `01.jpg`, `02.jpg`) make `event.json` easier to maintain.
+- **Supported file types**: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`.
+

@@ -138,12 +138,12 @@ const basePath = `/gallery/${event.id}/`;
     <section class="hero-banner">
         <div class="hero-banner-bg-wrap">
             <img
-                src={event.coverThumbUrl || event.coverUrl}
+                src={event.coverUrl}
                 alt=""
                 class="hero-banner-bg"
                 loading="eager"
                 decoding="async"
-                onerror={`if (this.src !== '${event.coverUrl}') { this.src='${event.coverUrl}'; } else { this.style.display='none'; }`}
+                onerror="this.style.display='none';"
             />
             <div class="hero-banner-overlay"></div>
         </div>
