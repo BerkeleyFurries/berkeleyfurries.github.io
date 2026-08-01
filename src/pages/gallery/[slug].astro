@@ -291,20 +291,24 @@ const basePath = `/gallery/${event.id}/`;
         const { basePath, photos, photoMeta } = data;
         if (!photos || photos.length === 0) return;
 
-        // In-memory image cache to retain loaded images and prevent re-fetches
-        const imageCache = new Map<string, HTMLImageElement>();
-
-        function preloadImage(url: string): HTMLImageElement {
-            if (!imageCache.has(url)) {
-                const img = new Image();
-                img.src = url;
-                imageCache.set(url, img);
+        function preloadNeighbors(
+            index: number,
+            photoList: string[],
+            folderPath: string,
+        ) {
+            const total = photoList.length;
+            if (total <= 1) return;
+            const count = 1;
+            for (let i = 1; i <= count; i++) {
+                const nextUrl = folderPath + photoList[(index + i) % total];
+                const prevUrl =
+                    folderPath + photoList[(index - i + total) % total];
+                const nextImg = new Image();
+                nextImg.src = nextUrl;
+                const prevImg = new Image();
+                prevImg.src = prevUrl;
             }
-            return imageCache.get(url)!;
         }
-
-        // Eagerly preload all event photos into memory
-        photos.forEach((f) => preloadImage(basePath + f));
 
         let currentIndex = 0;
 
@@ -349,43 +353,53 @@ const basePath = `/gallery/${event.id}/`;
             const url = basePath + filename;
             const meta = photoMeta[filename] ?? {};
 
-            const cached = preloadImage(url);
             imgEl.alt = filename;
 
-            if (cached.complete && cached.naturalWidth !== 0) {
-                imgEl.src = url;
+            imgEl.classList.remove("loaded");
+            spinner.hidden = false;
+            imgEl.src = url;
+            imgEl.onload = () => {
                 imgEl.classList.add("loaded");
                 spinner.hidden = true;
-            } else {
-                imgEl.classList.remove("loaded");
-                spinner.hidden = false;
-                imgEl.src = url;
-                cached.onload = () => {
-                    imgEl.classList.add("loaded");
-                    spinner.hidden = true;
-                };
-                cached.onerror = () => {
-                    spinner.hidden = true;
-                };
+            };
+            imgEl.onerror = () => {
+                spinner.hidden = true;
+            };
+            if (imgEl.complete && imgEl.naturalWidth !== 0) {
+                imgEl.classList.add("loaded");
+                spinner.hidden = true;
             }
 
+            // Preload 3 neighbors ahead and behind
+            preloadNeighbors(index, photos, basePath);
+
             counterEl.textContent = `${index + 1} / ${total}`;
-            photographerEl.textContent = meta.photographer
-                ? `📷 ${meta.photographer}`
-                : "";
-            suitersEl.textContent = meta.suiters?.length
-                ? `🐾 ${meta.suiters.join(", ")}`
-                : "";
-            descriptionEl.textContent = meta.description ?? "";
+            if (meta.photographer) {
+                photographerEl.textContent = `📷 ${meta.photographer}`;
+                photographerEl.style.display = "";
+            } else {
+                photographerEl.textContent = "";
+                photographerEl.style.display = "none";
+            }
+
+            if (meta.suiters?.length) {
+                suitersEl.textContent = `🐾 ${meta.suiters.join(", ")}`;
+                suitersEl.style.display = "";
+            } else {
+                suitersEl.textContent = "";
+                suitersEl.style.display = "none";
+            }
+
+            if (meta.description) {
+                descriptionEl.textContent = meta.description;
+                descriptionEl.style.display = "";
+            } else {
+                descriptionEl.textContent = "";
+                descriptionEl.style.display = "none";
+            }
 
             prevBtn.style.display = total > 1 ? "" : "none";
             nextBtn.style.display = total > 1 ? "" : "none";
-
-            // Preload next image if not already cached
-            if (total > 1) {
-                const nextUrl = basePath + photos[(index + 1) % total];
-                preloadImage(nextUrl);
-            }
         }
 
         function navigate(dir: 1 | -1) {
@@ -761,6 +775,10 @@ const basePath = `/gallery/${event.id}/`;
         gap: 1rem;
         flex-wrap: wrap;
         justify-content: center;
+        align-items: center;
+    }
+    .lightbox-meta span:empty {
+        display: none;
     }
     .lightbox-counter {
         color: rgba(255, 255, 255, 0.6);

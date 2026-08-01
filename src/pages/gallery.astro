@@ -273,20 +273,23 @@ function formatDate(date: string, dateEnd?: string): string {
         // Build a map: event id → event data
         const eventMap = new Map(eventsData.map((e) => [e.id, e]));
 
-        // Global in-memory image cache map
-        const imageCache = new Map<string, HTMLImageElement>();
-        function preloadImage(url: string): HTMLImageElement {
-            if (!imageCache.has(url)) {
-                const img = new Image();
-                img.src = url;
-                imageCache.set(url, img);
-            }
-            return imageCache.get(url)!;
-        }
-
         // Lightbox state
         let currentEvent: EventData | null = null;
         let currentIndex = 0;
+
+        function preloadNeighbors(index: number, photoList: string[], folderPath: string) {
+            const total = photoList.length;
+            if (total <= 1) return;
+            const count = 1;
+            for (let i = 1; i <= count; i++) {
+                const nextUrl = folderPath + photoList[(index + i) % total];
+                const prevUrl = folderPath + photoList[(index - i + total) % total];
+                const nextImg = new Image();
+                nextImg.src = nextUrl;
+                const prevImg = new Image();
+                prevImg.src = prevUrl;
+            }
+        }
 
         // DOM refs
         const lightbox      = document.getElementById("gallery-lightbox");
@@ -306,9 +309,6 @@ function formatDate(date: string, dateEnd?: string): string {
         function openLightbox(eventId: string, index = 0) {
             currentEvent = eventMap.get(eventId) ?? null;
             if (!currentEvent) return;
-
-            // Eagerly preload photos for this event
-            currentEvent.photos.forEach((f) => preloadImage(currentEvent!.basePath + f));
 
             currentIndex = index;
             showPhoto(currentIndex);
@@ -335,43 +335,55 @@ function formatDate(date: string, dateEnd?: string): string {
             const url      = currentEvent.basePath + filename;
             const meta     = currentEvent.photoMeta[filename] ?? {};
 
-            const cached = preloadImage(url);
             imgEl.alt = filename;
 
-            if (cached.complete && cached.naturalWidth !== 0) {
-                imgEl.src = url;
+            imgEl.classList.remove("loaded");
+            spinner.hidden = false;
+            imgEl.src = url;
+            imgEl.onload = () => {
                 imgEl.classList.add("loaded");
                 spinner.hidden = true;
-            } else {
-                imgEl.classList.remove("loaded");
-                spinner.hidden = false;
-                imgEl.src = url;
-                cached.onload = () => {
-                    imgEl.classList.add("loaded");
-                    spinner.hidden = true;
-                };
-                cached.onerror = () => {
-                    spinner.hidden = true;
-                };
+            };
+            imgEl.onerror = () => {
+                spinner.hidden = true;
+            };
+            if (imgEl.complete && imgEl.naturalWidth !== 0) {
+                imgEl.classList.add("loaded");
+                spinner.hidden = true;
             }
+
+            // Preload 3 neighbors ahead and behind
+            preloadNeighbors(index, photos, currentEvent.basePath);
 
             // Caption
             counterEl.textContent = `${index + 1} / ${total}`;
-            photographerEl.textContent = meta.photographer ? `📷 ${meta.photographer}` : "";
-            suitersEl.textContent = meta.suiters?.length
-                ? `🐾 ${meta.suiters.join(", ")}`
-                : "";
-            descriptionEl.textContent = meta.description ?? "";
+            if (meta.photographer) {
+                photographerEl.textContent = `📷 ${meta.photographer}`;
+                photographerEl.style.display = "";
+            } else {
+                photographerEl.textContent = "";
+                photographerEl.style.display = "none";
+            }
+
+            if (meta.suiters?.length) {
+                suitersEl.textContent = `🐾 ${meta.suiters.join(", ")}`;
+                suitersEl.style.display = "";
+            } else {
+                suitersEl.textContent = "";
+                suitersEl.style.display = "none";
+            }
+
+            if (meta.description) {
+                descriptionEl.textContent = meta.description;
+                descriptionEl.style.display = "";
+            } else {
+                descriptionEl.textContent = "";
+                descriptionEl.style.display = "none";
+            }
 
             // Nav visibility
             prevBtn.style.display = total > 1 ? "" : "none";
             nextBtn.style.display = total > 1 ? "" : "none";
-
-            // Preload next image
-            if (total > 1) {
-                const nextUrl = currentEvent.basePath + photos[(index + 1) % total];
-                preloadImage(nextUrl);
-            }
         }
 
         function navigate(dir: 1 | -1) {
@@ -810,6 +822,9 @@ function formatDate(date: string, dateEnd?: string): string {
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
+    }
+    .lightbox-meta span:empty {
+        display: none;
     }
     .lightbox-counter {
         color: rgba(255, 255, 255, 0.6);
