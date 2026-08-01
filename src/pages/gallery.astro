@@ -402,12 +402,35 @@ function formatDate(date: string, dateEnd?: string): string {
             if (e.key === "ArrowRight") navigate(1);
         });
 
+        // Tap/click image to advance: left 30% goes back, rest goes next
+        imgEl.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const rect = imgEl.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            if (clickX < rect.width * 0.3) {
+                navigate(-1);
+            } else {
+                navigate(1);
+            }
+        });
+
         // Touch / swipe support
         let touchStartX = 0;
-        lightbox.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        let touchStartY = 0;
+        lightbox.addEventListener(
+            "touchstart",
+            (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            },
+            { passive: true },
+        );
         lightbox.addEventListener("touchend", (e) => {
             const dx = e.changedTouches[0].clientX - touchStartX;
-            if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                navigate(dx < 0 ? 1 : -1);
+            }
         });
     }
 
@@ -603,6 +626,7 @@ function formatDate(date: string, dateEnd?: string): string {
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        white-space: pre-line;
     }
     .card-actions {
         display: flex;
@@ -731,6 +755,7 @@ function formatDate(date: string, dateEnd?: string): string {
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
         opacity: 0;
         transition: opacity 0.25s ease;
+        cursor: pointer;
     }
     .lightbox-img.loaded {
         opacity: 1;
@@ -803,6 +828,7 @@ function formatDate(date: string, dateEnd?: string): string {
         text-align: center;
         margin: 0;
         min-height: 0;
+        white-space: pre-line;
     }
 
 

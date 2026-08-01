@@ -414,17 +414,34 @@ const basePath = `/gallery/${event.id}/`;
             if (e.key === "ArrowRight") navigate(1);
         });
 
+        // Tap/click image to advance: left 30% goes back, rest goes next
+        imgEl.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const rect = imgEl.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            if (clickX < rect.width * 0.3) {
+                navigate(-1);
+            } else {
+                navigate(1);
+            }
+        });
+
         let touchStartX = 0;
+        let touchStartY = 0;
         lightbox.addEventListener(
             "touchstart",
             (e) => {
                 touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
             },
             { passive: true },
         );
         lightbox.addEventListener("touchend", (e) => {
             const dx = e.changedTouches[0].clientX - touchStartX;
-            if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                navigate(dx < 0 ? 1 : -1);
+            }
         });
     }
 
@@ -502,6 +519,7 @@ const basePath = `/gallery/${event.id}/`;
         line-height: 1.6;
         max-width: 650px;
         margin-bottom: 0.75rem;
+        white-space: pre-line;
     }
     .event-photo-count {
         color: rgba(255, 255, 255, 0.45);
@@ -656,6 +674,7 @@ const basePath = `/gallery/${event.id}/`;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
         opacity: 0;
         transition: opacity 0.25s ease;
+        cursor: pointer;
     }
     .lightbox-img.loaded {
         opacity: 1;
@@ -759,6 +778,7 @@ const basePath = `/gallery/${event.id}/`;
         max-width: 60ch;
         text-align: center;
         margin: 0;
+        white-space: pre-line;
     }
 
     /* Mobile */
