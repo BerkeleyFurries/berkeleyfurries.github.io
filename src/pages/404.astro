@@ -8,23 +8,43 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout title="404" description="Page not found :3c">
     <div class="container py-5 not-found">
-        <h1>404</h1>
+        <div class="not-found-header">
+            <h1>404</h1>
+            <img src="/img/small.gif" alt="Puppy" class="puppy-gif" />
+        </div>
         <p>page not found :3c</p>
         <img src="/img/nelli.jpg" alt="Nelli" class="nelli-img" />
     </div>
 </BaseLayout>
 
 <style>
+    .not-found-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
     .not-found h1 {
         font-size: 6rem;
         font-weight: 900;
         color: var(--blue);
         line-height: 1;
+        margin-bottom: 0;
+    }
+
+    .puppy-gif {
+        height: 5.5rem;
+        width: auto;
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 15px var(--blue-glow);
+        object-fit: contain;
     }
 
     .not-found p {
         font-size: 1.5rem;
         color: var(--text-muted);
+        margin-top: 0.5rem;
     }
 
     .nelli-img {
@@ -32,6 +52,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         width: 100%;
         border-radius: var(--radius-lg);
         box-shadow: 0 8px 30px var(--blue-glow);
-        margin-top: 0.5rem;
+        margin-top: 1rem;
     }
 </style>

@@ -24,7 +24,7 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
 
 <!doctype html>
 <!-- Remove the style for the background loading to make it white -->
-<html lang="en" style={title === "Home" ? "background-color: #001c57;" : ""}>
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -80,7 +80,7 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
         <!-- Header -->
         <!-- "taskbar" is the custom css element -->
         <nav
-            class="navbar navbar-expand-md navbar-dark fixed-top taskbar"
+            class="navbar navbar-expand-md navbar-dark sticky-top taskbar"
             transition:persist
             transition:animate="none"
         >
@@ -210,6 +210,23 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
         padding: 0;
     }
 
+    html {
+        background-color: var(--blue);
+    }
+
+    html,
+    body {
+        overscroll-behavior-y: auto;
+    }
+
+    /* Scrolling fix for mobile/desktop */
+    @media (pointer: fine) {
+        html,
+        body {
+            overscroll-behavior-y: none;
+        }
+    }
+
     body {
         font-family: var(--font-sans);
         background-color: var(--bg);
@@ -301,7 +318,7 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
     }
 
     .page-content {
-        margin-top: 80px; /* offset the fixed header */
+        margin-top: 0; /* sticky header in flow */
         flex: 1;
         display: flex;
         flex-direction: column;
