@@ -210,19 +210,22 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
         padding: 0;
     }
 
-    html {
-        background-color: var(--blue);
-    }
-
     html,
     body {
-        overscroll-behavior-y: none;
+        background-color: var(--blue);
+        overscroll-behavior-y: auto;
+    }
+
+    /* Scrolling fix for mobile/desktop */
+    @media (pointer: fine) {
+        html,
+        body {
+            overscroll-behavior-y: none;
+        }
     }
 
     body {
         font-family: var(--font-sans);
-        background-color: var(--bg);
-
         color: var(--text-main);
         min-height: 100vh;
         display: flex;
@@ -310,6 +313,7 @@ const imageUrl = new URL("/img/AAAA_Logo_512.png", siteUrl).href;
     }
 
     .page-content {
+        background-color: var(--bg);
         margin-top: 0; /* sticky header in flow */
         flex: 1;
         display: flex;
