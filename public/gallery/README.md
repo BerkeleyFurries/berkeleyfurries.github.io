@@ -9,27 +9,28 @@ This folder contains all event photo galleries for the Furries at Berkeley websi
 ```
 public/gallery/
 ├── README.md           ← you are here
-├── furmeet-fall-2026/  ← event folder
+├── furmeet-fall-2026/  ← event folder (folder name is the URL slug: /gallery/furmeet-fall-2026)
 │   ├── event.json      ← event metadata (required)
 │   ├── cover.jpg       ← cover photo (referenced in event.json)
 │   ├── photo01.jpg
 │   ├── photo02.jpg
 │   └── ...
-├── 2/
+├── fc-2026/                  ← event folder (URL slug: /gallery/fc-2026)
 │   ├── event.json
 │   └── ...
 └── ...
 ```
 
-**Event date determine display order** — most recent event is first.
+**Event folder names determine the URL slug** (`/gallery/[folder-name]`). Use lowercase letters, numbers, and hyphens.  
+**Event date determines display order** — most recent event is listed first.
 
 ---
 
 ## How to Add a New Event
 
-1. **Create a new folder** inside `public/gallery/`. Use a descriptive name, e.g. "furmeet-fall-2026".
+1. **Create a new folder** inside `public/gallery/`. The folder name will be your event's URL slug (e.g. `furmeet-fall-2026`).
 
-2. **Drop your photos** into the folder. Supported formats: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`
+2. **Drop your photos** into the folder. Supported formats: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`.
 
 3. **Create an `event.json`** in the folder using the template below.
 
@@ -42,7 +43,6 @@ public/gallery/
 ```json
 {
   "name": "Event Name Here",
-  "slug": "event-url-slug",
   "date": "2026-06-07",
   "dateEnd": "2026-06-09",
   "description": "A short description of the event shown on the gallery card.",
@@ -71,7 +71,6 @@ public/gallery/
 | Field | Required | Description |
 |---|---|---|
 | `name` | ✅ | Display name of the event (shown on the card and sub-page) |
-| `slug` | ✅ | URL-safe identifier — used for the sub-page URL: `/gallery/[slug]`. Use lowercase letters, numbers, and hyphens only. |
 | `date` | ✅ | Event date in `YYYY-MM-DD` format |
 | `dateEnd` | ❌ | End date in `YYYY-MM-DD` format — omit or leave blank for single-day events |
 | `description` | ❌ | Short blurb shown on the card and event page |
@@ -92,7 +91,7 @@ public/gallery/
 
 ## Tips
 
-- **Slug must be unique** across all events. If two events share a slug, only one will build correctly.
+- **Folder names must be unique** across all events.
 - **Cover photo** should be a good landscape-ish crop — it's displayed at 4:3 ratio on the card.
 - **File names** don't need to follow any specific convention, but keeping them simple (e.g. `01.jpg`, `02.jpg`) makes `event.json` easier to write.
 - **Photos load lazily** — only the currently viewed photo is loaded in the lightbox, so large event folders are fine.

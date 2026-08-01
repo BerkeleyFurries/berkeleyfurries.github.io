@@ -68,7 +68,7 @@ export async function getStaticPaths() {
                             sensitivity: "base",
                         }),
                     );
-                const slug = json.slug ?? folder.name;
+                const slug = folder.name;
                 paths.push({
                     params: { slug },
                     props: {

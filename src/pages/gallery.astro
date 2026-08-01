@@ -61,11 +61,11 @@ try {
                     }),
                 );
 
-            // fallbacks to Unititled Event and folder name for slug, and first picture for cover  
+            // fallbacks to Untitled Event and first picture for cover  
             events.push({
                 id: folder.name,
                 name: json.name ?? "Untitled Event",
-                slug: json.slug ?? folder.name,
+                slug: folder.name,
                 date: json.date ?? "",
                 dateEnd: json.dateEnd ?? "",
                 description: json.description ?? "",
