@@ -9,7 +9,7 @@ This folder contains all event photo galleries for the Furries at Berkeley websi
 ```
 public/gallery/
 ├── README.md           ← you are here
-├── 1/                  ← event folder (numbered)
+├── furmeet-fall-2026/  ← event folder
 │   ├── event.json      ← event metadata (required)
 │   ├── cover.jpg       ← cover photo (referenced in event.json)
 │   ├── photo01.jpg
@@ -21,13 +21,13 @@ public/gallery/
 └── ...
 ```
 
-**Folder numbers determine display order** — higher numbers appear first on the gallery page (so new events get higher numbers).
+**Event date determine display order** — most recent event is first.
 
 ---
 
 ## How to Add a New Event
 
-1. **Create a new numbered folder** inside `public/gallery/`. Use the next number in sequence (e.g. if `3/` is the latest, create `4/`).
+1. **Create a new folder** inside `public/gallery/`. Use a descriptive name, e.g. "furmeet-fall-2026".
 
 2. **Drop your photos** into the folder. Supported formats: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`
 

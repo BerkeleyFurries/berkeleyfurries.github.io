@@ -39,9 +39,7 @@ let events: GalleryEvent[] = [];
 // builds the events array from the files
 try {
     const folders = await readdir(galleryRoot, { withFileTypes: true });
-    const eventFolders = folders
-        .filter((d) => d.isDirectory())
-        .sort((a, b) => Number(b.name) - Number(a.name)); // newest-first (highest number)
+    const eventFolders = folders.filter((d) => d.isDirectory());
 
     for (const folder of eventFolders) {
         const folderPath = join(galleryRoot, folder.name);
@@ -81,6 +79,16 @@ try {
             // Skip folders without a valid event.json
         }
     }
+
+    // Sort events by start date, with the most recent listed first
+    events.sort((a, b) => {
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return b.id.localeCompare(a.id, undefined, { numeric: true });
+    });
 } catch {
     // gallery folder doesn't exist yet
 }
