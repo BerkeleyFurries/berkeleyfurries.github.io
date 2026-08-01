@@ -63,3 +63,7 @@ This website is configured to deploy automatically via **GitHub Actions**, which
 - [x] 404 page
 - [x] Gallery page 
 - [ ] Gallery optimization for mobile/data saving (possibility of creating optimized thumbnails at build time)
+- [ ] Refactor gallery to sort by date instead of folder name
+- [x] Merch/rewards page
+- [ ] Artists page (copy gallery)
+- [ ] ? Refactor file locations? ? ? small change but will check for what the convention is
