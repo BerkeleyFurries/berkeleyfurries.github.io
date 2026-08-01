@@ -59,8 +59,8 @@ export async function ensureThumbnail(
         if (needBuild) {
             // animated: true preserves frames for GIFs and animated WebPs
             await sharp(srcPath, { animated: true })
-                .resize({ width: 450, withoutEnlargement: true })
-                .webp({ quality: 80 })
+                .resize({ width: 800, withoutEnlargement: true })
+                .webp({ quality: 90 })
                 .toFile(publicThumbPath);
         }
 
@@ -69,8 +69,8 @@ export async function ensureThumbnail(
             await mkdir(distThumbDir, { recursive: true });
             if (!existsSync(distThumbPath)) {
                 await sharp(srcPath, { animated: true })
-                    .resize({ width: 450, withoutEnlargement: true })
-                    .webp({ quality: 80 })
+                    .resize({ width: 800, withoutEnlargement: true })
+                    .webp({ quality: 90 })
                     .toFile(distThumbPath);
             }
         }
