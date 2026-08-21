@@ -69,3 +69,4 @@ This website is configured to deploy automatically via **GitHub Actions**, which
 - [x] Merch/rewards page
 - [ ] Artists page (copy gallery)
 - [ ] ? Refactor file locations? ? ? small change but will check for what the convention is
+- [ ] Integrate monthly announcements onto the website

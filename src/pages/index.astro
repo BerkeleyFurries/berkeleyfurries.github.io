@@ -37,13 +37,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 				<!-- "hero-title" is custom -->
 				<h1 class="hero-title">Furries @ Berkeley</h1>
 				<!-- "subtitle" is custom -->
-				<p class="subtitle">Meow meow meow meow! :3</p>
+				<p class="subtitle">Go Bears (and cats, dogs, reptiles…)!</p>
 
 				<!-- "stats-badge" is custom -->
 				<div
 					class="d-flex align-items-center gap-2 rounded-pill stats-badge"
 				>
-					<span>467+ Members</span>
+					<span>450+ Members</span>
 					<span class="dot">•</span>
 					<span>Est. 2022</span>
 				</div>
@@ -63,16 +63,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 					<!-- "card-body" is custom -->
 					<div class="card-body">
 						<p>
-							<strong>Furries at Berkeley</strong> is a furry club at
-							Berkeley under AAAA :3
+							As the first club established under Anthropomorphic
+							Animal Appreciation Association (AAAA) in 2022, we
+							strive to create a welcoming environment for all
+							furries (and non-furries) here at UC Berkeley, and
+							internationally! Through AAAA, furry clubs at
+							universities have been able to grow and interact
+							with each other, building community for thousands of
+							people.
 						</p>
-						<p>Meow :3</p>
-						<p>Woof :33</p>
-						<p>Chirp ^^</p>
-						<p>Glub glub</p>
-						<p>e e e e e e</p>
-						<p>Cawww</p>
-                        <p>Awooooooo 🐺</p>
 					</div>
 				</div>
 			</div>
@@ -99,9 +98,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 			<div class="row justify-content-center">
 				<div class="col-lg-10 col-xl-10">
 					<h2>How do I get involved?</h2>
-					<p class="tagline">Say hi at tabling :3</p>
 					<div class="card-body">
-						<p>Join discord! Or mailing list! Or both :3</p>
+						<p>
+							Please reach out to us on social media, or find us
+							tabling on Sproul Plaza! From there we can share
+							links to our discord and mailing list, where we send
+							out monthly updates.
+						</p>
+						<p>
+							And if you’re interested in assisting our club
+							fiscally, we also have merchandise available for
+							sale <a href="/merch" class="inline-link">here</a>!
+						</p>
 					</div>
 				</div>
 			</div>
@@ -131,7 +139,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 									aria-expanded="false"
 									aria-controls="collapseOne"
 								>
-									How much is a fursuit? Do I need one?
+									Is this club exclusive to UC Berkeley?/Do I
+									need to be a student to join?
 								</button>
 							</h2>
 							<div
@@ -141,8 +150,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 								data-bs-parent="#faqAccordion"
 							>
 								<div class="accordion-body faq-content">
-									<p>Expensiv...</p>
-									<p>No :3</p>
+									<p>
+										Nope! Our club is open to anyone
+										interested in joining, regardless of
+										school status. Faculty, staff, grad
+										students, a stranger walking down
+										Telegraph..? Everyone is welcome!
+									</p>
 								</div>
 							</div>
 						</div>
@@ -157,7 +171,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 									aria-expanded="false"
 									aria-controls="collapseTwo"
 								>
-									Why are furries the way they are?
+									Do I have to be a furry to join?
 								</button>
 							</h2>
 							<div
@@ -167,7 +181,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 								data-bs-parent="#faqAccordion"
 							>
 								<div class="accordion-body faq-content">
-									<p>:3</p>
+									<p>
+										No! And if you are interested in
+										becoming one, we host multiple meetings
+										and workshops on how to create a fursona
+										(furry + sona), as well as other
+										artistic and furry-related topics each
+										month.
+									</p>
 								</div>
 							</div>
 						</div>
@@ -182,7 +203,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 									aria-expanded="false"
 									aria-controls="collapseThree"
 								>
-									Do I have to be a furry to join?
+									Is this club NSFW?
 								</button>
 							</h2>
 							<div
@@ -192,7 +213,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 								data-bs-parent="#faqAccordion"
 							>
 								<div class="accordion-body faq-content">
-									<p>No :D</p>
+									<p>
+										Nope! We actively discourage any and all
+										adult content from being
+										shared/discussed in our community
+										spaces. While some aspects of the furry
+										community delve into more adult/NSFW
+										topics, as a club we are safe for all
+										ages!
+									</p>
 								</div>
 							</div>
 						</div>
@@ -207,8 +236,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 									aria-expanded="false"
 									aria-controls="collapseFour"
 								>
-									Do I have to be a student at UC Berkeley to
-									join?
+									Am I required to have a fursuit? How can I
+									get one?
 								</button>
 							</h2>
 							<div
@@ -218,32 +247,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 								data-bs-parent="#faqAccordion"
 							>
 								<div class="accordion-body faq-content">
-									<p>Nope :D</p>
-								</div>
-							</div>
-						</div>
-
-						<div class="accordion-item faq-item">
-							<h2 class="accordion-header" id="headingFive">
-								<button
-									class="accordion-button collapsed"
-									type="button"
-									data-bs-toggle="collapse"
-									data-bs-target="#collapseFive"
-									aria-expanded="false"
-									aria-controls="collapseFive"
-								>
-									Is this club exclusive to UC Berkeley?
-								</button>
-							</h2>
-							<div
-								id="collapseFive"
-								class="accordion-collapse collapse"
-								aria-labelledby="headingFive"
-								data-bs-parent="#faqAccordion"
-							>
-								<div class="accordion-body faq-content">
-									<p>No :3</p>
+									<p>
+										Fursuits are not a requirement to be a
+										furry! For those who do have them, many
+										members in the community either make
+										their own suits, or pay other artists to
+										create one for them. These can range in
+										price from a few hundred dollars all the
+										way into the thousands!
+									</p>
 								</div>
 							</div>
 						</div>
@@ -423,6 +435,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 	.card-body strong {
 		color: var(--text-main);
 		font-weight: 600;
+	}
+	.card-body a,
+	.inline-link {
+		color: var(--blue);
+		font-weight: 700;
+		text-decoration: none;
+		transition:
+			color 0.2s ease,
+			opacity 0.2s ease;
+	}
+	.card-body a:hover,
+	.inline-link:hover {
+		color: var(--dark-blue);
+		text-decoration: none;
+		opacity: 0.8;
 	}
 
 	/* ACCORDION/FAQ STYLING */
